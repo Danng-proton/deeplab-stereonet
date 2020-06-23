@@ -112,7 +112,7 @@ class MultiScale(nn.Module):
             # np.expand_dims(target, 1)
             print(type(target))
             target = F.interpolate(
-                    (target),
+                    (torch.unsqueeze(target,1)),
                     size=[output_.shape[-2],output_.shape[-1]],
                     mode='bilinear',
                     align_corners=False),

@@ -358,13 +358,13 @@ class StereoNet(nn.Module):
         # print("cost")
         # print(cost)
         cost = cost.contiguous()
-        print("******************cost:",cost.shape)
+        # print("******************cost:",cost.shape)
         # score_reshape = torch.FloatTensor(cost.size()).zero_().cuda()
-        print("******************score:", score_map.shape)
+        # print("******************score:", score_map.shape)
         score_map_softmax= F.softmax(score_map, dim=1)
-        print("******************score_softmax:", score_map_softmax.shape)
+        # print("******************score_softmax:", score_map_softmax.shape)
         score_map_softmax_adddim1=torch.unsqueeze(score_map_softmax,1)
-        print("******************score_softmax:", score_map_softmax_adddim1.shape)
+        # print("******************score_softmax:", score_map_softmax_adddim1.shape)
         score_reshape=score_map_softmax_adddim1.repeat(1,refimg_feature.size()[1],1,1,1)
 
         # for channal_id in range(refimg_feature.size()[1]):
