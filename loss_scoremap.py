@@ -121,11 +121,11 @@ class MultiScale(nn.Module):
             # target_0 = torch.from_numpy(target)
             # target_0=Variable(target_0).cuda()
             target_0 = Variable(target[0]).cuda()
-            # scoremap_disp=output_.shape[1]
+            scoremap_disp=output_.shape[1]
             # print("scoremap_disp",scoremap_disp.shape(),scoremap_disp.shape())
-            # max_disp=scoremap_disp*8
-            # label=target_0/max_disp*scoremap_disp
-            label=target_0/8
+            max_disp=scoremap_disp*8
+            label=target_0/max_disp*scoremap_disp
+            # label=target_0/8
             semanteme_loss = loss_calc(output_[0,:,:,:], label, target_0)
             lossvalue += semanteme_loss
             epevalue += EPE(output_[0,:,:,:], target_0)
@@ -158,7 +158,7 @@ def loss_calc(out, label, target):
         W = torch.exp(-0.5*res.mul(res)).float()
         # m = nn.LogSoftmax()
         out = torch.where(target_list==0,torch.full_like(out, 1), out)
-        out = np.log(out.cpu())
+        out = np.log(out)
         out = out.mul(W)
         return -torch.mean(out)
 
