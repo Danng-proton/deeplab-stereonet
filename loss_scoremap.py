@@ -110,7 +110,7 @@ class MultiScale(nn.Module):
             # target = torch.squeeze(target).cpu()
             # print("GTshape",np.expand_dims(target,1).shape,"output",output_.shape)
             # np.expand_dims(target, 1)
-            print(type(target))
+            # print(type(target))
             target = F.interpolate(
                     (torch.unsqueeze(target,1)),
                     size=[output_.shape[-2],output_.shape[-1]],
@@ -121,11 +121,11 @@ class MultiScale(nn.Module):
             # target_0 = torch.from_numpy(target)
             # target_0=Variable(target_0).cuda()
             target_0 = Variable(target[0]).cuda()
-            scoremap_disp=output_.shape[1]
-            # print("scoremap_disp",scoremap_disp.shape(),scoremap_disp.shape())
-            max_disp=scoremap_disp*8
-            label=target_0/max_disp*scoremap_disp
-            # label=target_0/8
+            # scoremap_disp=output_.shape[1]
+            # # print("scoremap_disp",scoremap_disp.shape(),scoremap_disp.shape())
+            # max_disp=scoremap_disp*8
+            # label=target_0/max_disp*scoremap_disp
+            label=target_0/8
             semanteme_loss = loss_calc(output_[0,:,:,:], label, target_0)
             lossvalue += semanteme_loss
             epevalue += EPE(output_[0,:,:,:], target_0)
