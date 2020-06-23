@@ -156,10 +156,11 @@ def loss_calc(out, label, target):
         res = (bin - label).float()
         
         W = torch.exp(-0.5*res.mul(res)).float()
-        # m = nn.LogSoftmax()
+        m = nn.LogSoftmax()
         out = torch.where(target_list==0,torch.full_like(out, 1), out)
-        out = torch.log_softmax(out)
+        # out = torch.log_softmax(out)
         # out = torch.log(out)
+        out = m(out)
         out = out.mul(W)
         return -torch.mean(out)
 
