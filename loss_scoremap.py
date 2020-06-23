@@ -109,6 +109,7 @@ class MultiScale(nn.Module):
             #                     interpolation=cv2.INTER_NEAREST)
 
             # print("GTshape",np.expand_dims(target,1).shape,"output",output_.shape)
+            print(type(target))
             target = F.interpolate(
                     (np.expand_dims(target,1)),
                     size=[output_.shape[-2],output_.shape[-1]],
