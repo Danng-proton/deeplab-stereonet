@@ -362,7 +362,7 @@ class StereoNet(nn.Module):
         # score_reshape = torch.FloatTensor(cost.size()).zero_().cuda()
         print("******************score:", score_map.shape)
         score_map_softmax= F.softmax(cost, dim=1)
-        print("******************score_softmax:", score_map.shape)
+        print("******************score_softmax:", score_map_softmax.shape)
         score_map_softmax_adddim1=torch.unsqueeze(score_map_softmax,1)
         print("******************score_softmax:", score_map_softmax_adddim1.shape)
         score_reshape=score_map_softmax_adddim1.repeat(1,refimg_feature.size()[1],1,1,1)
