@@ -363,8 +363,9 @@ class StereoNet(nn.Module):
         print("******************score:", score_map.shape)
         score_map_softmax= F.softmax(cost, dim=1)
         print("******************score_softmax:", score_map.shape)
+        score_map_softmax=torch.unsqueeze(score_map_softmax,1)
         for channal_id in range(refimg_feature.size()[1]):
-            score_reshape[:,channal_id,:,:,:]=score_map_softmax
+            score_reshape[:,channal_id,:,:,:]=score_map_softmax[:,0,:,:,:]
         out_corr = torch.mul(score_reshape, cost)
 
         for f in self.filter:
