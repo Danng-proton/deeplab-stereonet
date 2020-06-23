@@ -103,15 +103,16 @@ class MultiScale(nn.Module):
             # output_reshape=cv2.resize(src=target, dsize=(int(output_.shape[3]), int(output_.shape[2])),
             #            interpolation=cv2.INTER_NEAREST)
             # target_0 =torch.from_numpy(np.expand_dims(output_reshape,0).cpu())
-            target = torch.squeeze(target).cpu()
+
             # target = np.array(target)
             # target = cv2.resize(src=target, dsize=(int(output_.shape[-1]), int(output_.shape[-2])),
             #                     interpolation=cv2.INTER_NEAREST)
-
+            # target = torch.squeeze(target).cpu()
             # print("GTshape",np.expand_dims(target,1).shape,"output",output_.shape)
+            # np.expand_dims(target, 1)
             print(type(target))
             target = F.interpolate(
-                    (np.expand_dims(target,1)),
+                    (target),
                     size=[output_.shape[-2],output_.shape[-1]],
                     mode='bilinear',
                     align_corners=False),
