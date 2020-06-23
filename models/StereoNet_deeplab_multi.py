@@ -358,7 +358,7 @@ class StereoNet(nn.Module):
         # print("cost")
         # print(cost)
         cost = cost.contiguous()
-        print("cost:",cost.shape)
+        print("******************cost:",cost.shape)
         score_reshape = torch.FloatTensor(cost.size()).zero_().cuda()
         for channal_id in range(refimg_feature.size()[1]):
             score_reshape[:,channal_id,:,:,:]=score_map
