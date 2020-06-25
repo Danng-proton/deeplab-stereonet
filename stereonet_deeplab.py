@@ -300,12 +300,9 @@ def test(dataloader, model,save_path, log):
         disp_ests = outputs[:stages]
         scoremap = scoremap_pred
         if args.print_maps:
-            print("print maps")
+            # print("print maps")
             # sceneflow
             test_gt_path = save_path + '/driving_test_gt/'
-            print("++++++++++++++++++++++++++++++")
-            print(test_gt_path,"************",os.path.exists(test_gt_path))
-            print("++++++++++++++++++++++++++++++")
             if not os.path.exists(test_gt_path):
                 os.makedirs(test_gt_path)
             test_pred1_path = save_path + '/driving_test_pred/'
@@ -319,7 +316,6 @@ def test(dataloader, model,save_path, log):
                 os.makedirs(test_pred1_errormap_pred1)
             test_pred1_errormap_scoremap = save_path + '/driving_test_errormap_scoremap/'
             if not os.path.exists(test_pred1_errormap_scoremap):
-                print("新建了目录")
                 os.makedirs(test_pred1_errormap_scoremap)
 
             _, H, W = disp_ests[0].shape
