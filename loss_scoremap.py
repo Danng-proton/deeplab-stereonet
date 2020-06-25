@@ -115,7 +115,7 @@ class MultiScale(nn.Module):
                     (torch.unsqueeze(target,1)),
                     size=[output_.shape[-2],output_.shape[-1]],
                     mode='bilinear',
-                    align_corners=False),
+                    align_corners=False)
             # target = np.expand_dims(target, 0)
             # # target = np.expand_dims(target, 0)
             # target_0 = torch.from_numpy(target)

@@ -233,6 +233,11 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
 
             #vis
             _, H, W = outputs[0].shape
+            scoremap_pred = F.interpolate(
+                    (torch.unsqueeze(scoremap_pred,1)),
+                    size=[H,W],
+                    mode='bilinear',
+                    align_corners=False)
             all_results = torch.zeros((len(outputs)+2, 1, H, W))
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :]/255.0
