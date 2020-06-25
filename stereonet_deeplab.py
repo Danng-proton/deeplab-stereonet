@@ -217,7 +217,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
         writer.add_scalar('train_loss_-1level', loss[-2], epoch)
 
         if batch_idx % args.print_freq == 0:
-            print(loss_score[0])
+            # print(loss_score[0])
             info_str = ['Stage {} loss = {:.2f}({:.2f})'.format(x, losses[x].val, losses[x].avg) for x in range(stages)]
             
             # info_str = '\t'.join(info_str)
@@ -315,6 +315,7 @@ def test(dataloader, model,save_path, log):
                 os.makedirs(test_pred1_errormap_pred1)
             test_pred1_errormap_scoremap = save_path + '/driving_test_errormap_scoremap/'
             if not os.path.exists(test_pred1_errormap_scoremap):
+                print("新建了目录")
                 os.makedirs(test_pred1_errormap_scoremap)
 
             _, H, W = disp_ests[0].shape
@@ -350,8 +351,8 @@ def test(dataloader, model,save_path, log):
             disp_gt_resized=torch.unsqueeze(torch.from_numpy(disp_gt_resized),0)
             errormap_scoremap = visual(scoremap[:, :, :].cpu(), disp_gt_resized[:, :, :].cpu())
             errormap_scoremap = np.squeeze(errormap_scoremap).numpy().transpose(1,2,0)*255
-            print("errormap_scoremap")
-            print(errormap_scoremap)
+            # print("errormap_scoremap")
+            # print(errormap_scoremap)
             cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-%d.png" % batch_idx), errormap_scoremap)
 
     # #kitti
