@@ -146,7 +146,7 @@ def main():
         torch.save(checkpoint_data, "{}/checkpoint_{:0>6}.pth".format(args.save_path, epoch))
         if args.train:
             #train
-            savefilename = save_path + '/checkpoint.pth'
+            savefilename = save_path + '/checkpoint-sceneflow.pth'
             torch.save({
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
@@ -298,8 +298,9 @@ def test(dataloader, model,save_path, log):
             batch_idx, length_loader, info_str))
 
         disp_ests = outputs[:stages]
-        scoremap = scoremap_pred
+        scoremap = scoremap_predcd
         if args.print_maps:
+            print("print maps")
             # sceneflow
             test_gt_path = save_path + '/driving_test_gt/'
             if not os.path.exists(test_gt_path):
