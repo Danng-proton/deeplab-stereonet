@@ -415,7 +415,7 @@ class StereoNet(nn.Module):
                 mode='bilinear',
                 align_corners=False),
             dim=1)
-        pred_pyramid_list.append(score_map)
+        pred_pyramid_list.append(score_map_softmax)
         # print ("score_pred...........",score_map_pred.shape)
         pred_pyramid_list.append(score_map_pred)
         return pred_pyramid_list
