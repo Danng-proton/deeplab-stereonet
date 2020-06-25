@@ -303,6 +303,7 @@ def test(dataloader, model,save_path, log):
             print("print maps")
             # sceneflow
             test_gt_path = save_path + '/driving_test_gt/'
+            print(test_gt_path,"************",os.path.exists(test_gt_path))
             if not os.path.exists(test_gt_path):
                 os.makedirs(test_gt_path)
             test_pred1_path = save_path + '/driving_test_pred/'
