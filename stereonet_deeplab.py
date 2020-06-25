@@ -39,10 +39,10 @@ parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
 parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--checkpoint_save_path', type=str, default='results/8Xmulti/checkpoint.pth',
+parser.add_argument('--test_save_path', type=str, default='results/test-6-25/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default=None, help='resume path')
+parser.add_argument('--resume', type=str, default='results/8Xmulti/checkpoint.pth', help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -94,7 +94,7 @@ def main():
     if args.train:
         save_path=args.save_path
     else:
-        save_path=args.checkpoint_save_path
+        save_path=args.test_save_path
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
