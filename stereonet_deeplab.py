@@ -39,7 +39,7 @@ parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
 parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--checkpoint_save_path', type=str, default='results/8Xmulti/checkpoint_512_sceneflow_only.pth',
+parser.add_argument('--checkpoint_save_path', type=str, default='results/8Xmulti/checkpoint.pth',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
 parser.add_argument('--resume', type=str, default=None, help='resume path')
@@ -333,6 +333,7 @@ def test(dataloader, model,save_path, log):
 
             im_scoremap = np.array(scoremap[0, :, :].cpu(), dtype=np.uint16)
             # print("im_scoremap")
+
             # print(im_scoremap.shape)
             # print(im_scoremap.dtype)
             cv.imwrite(join(test_pred1_scoremap, "sceneflow-%d.png" % batch_idx), im_scoremap*255)
