@@ -298,7 +298,7 @@ def test(dataloader, model,save_path, log):
             batch_idx, length_loader, info_str))
 
         disp_ests = outputs[:stages]
-        scoremap = scoremap_predcd
+        scoremap = scoremap_pred
         if args.print_maps:
             print("print maps")
             # sceneflow
