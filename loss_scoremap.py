@@ -140,7 +140,7 @@ def loss_calc(out, label, target):
    
     # out shape batch_size x channels x h x w -> batch_size x channels x h x w
     # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
-
+        eps = 1e-5
         #label = label.transpose(3,2,0,1)
         #label = torch.from_numpy(label)
         label = Variable(label).cuda().int()
@@ -162,7 +162,7 @@ def loss_calc(out, label, target):
         # out = torch.log_softmax(out)
         # out = torch.log(out)
         # out = m(out)
-        out = torch.log2(out)
+        out = torch.log2(out+eps)
         out = out.mul(W)
         return -torch.mean(out)
 
