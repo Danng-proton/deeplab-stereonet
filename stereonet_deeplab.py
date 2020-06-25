@@ -223,7 +223,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             # info_str = '\t'.join(info_str)
 
             # added
-            info_str.extend(['score loss = {:.2f}({:.2f})'.format(loss_scoremap[1].val, loss_scoremap[1].avg)])
+            info_str.extend(['score loss = {:.2f}({:.2f})'.format(loss_score[1].val, loss_score[1].avg)])
 
             info_str = '\t'.join(info_str)
             # added
