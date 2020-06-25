@@ -329,7 +329,7 @@ def test(dataloader, model,save_path, log):
 
             im_pred1 = np.array(disp_ests[2][0, :, :].cpu(), dtype=np.uint16)
             # print(im_pred1.shape)
-            cv.imwrite(join(test_pred1_path, "sceneflow-%d.png" % batch_idx), im_pred1*255)
+            cv.imwrite(join(test_pred1_path, "sceneflow-pred-%d.png" % batch_idx), im_pred1*255)
             # print ("im_pred1................",im_pred1.shape,type(im_pred1))
 
             im_scoremap = np.array(scoremap[0, :, :].cpu(), dtype=np.uint16)
@@ -337,14 +337,14 @@ def test(dataloader, model,save_path, log):
 
             # print(im_scoremap.shape)
             # print(im_scoremap.dtype)
-            cv.imwrite(join(test_pred1_scoremap, "sceneflow-%d.png" % batch_idx), im_scoremap*255)
+            cv.imwrite(join(test_pred1_scoremap, "sceneflow-scoremap-%d.png" % batch_idx), im_scoremap*255)
 
             errormap_pred1 = visual(disp_ests[2][:, :, :].cpu(), disp_gt[:, :, :].cpu())
             # print ("errormap_pred1................", type(errormap_pred1))
             errormap_pred1 = np.squeeze(errormap_pred1).numpy().transpose(1,2,0)*255
             # print("errormap_pred1")
             # print(errormap_pred1)
-            cv.imwrite(join(test_pred1_errormap_pred1, "sceneflow-%d.png" % batch_idx), errormap_pred1)
+            cv.imwrite(join(test_pred1_errormap_pred1, "sceneflow-pred-errormap-%d.png" % batch_idx), errormap_pred1)
 
             _, size_w, size_h = scoremap.shape
             disp_gt_resized = cv.resize(disp_gt[0,:,:].cpu().numpy(), (size_h,size_w), interpolation=cv.INTER_AREA)
@@ -353,7 +353,7 @@ def test(dataloader, model,save_path, log):
             errormap_scoremap = np.squeeze(errormap_scoremap).numpy().transpose(1,2,0)*255
             # print("errormap_scoremap")
             # print(errormap_scoremap)
-            cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-%d.png" % batch_idx), errormap_scoremap)
+            cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-score-errormap-%d.png" % batch_idx), errormap_scoremap)
 
     # #kitti
         # test_gt_path=save_path+'/driving_test_gt/'
