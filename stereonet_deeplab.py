@@ -29,7 +29,9 @@ parser = argparse.ArgumentParser(description='StereoNet_deeplab with sceneflow')
 parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[1.0, 1.0, 1.0, 1.0, 1.0])
 #parser.add_argument('--datapath', default='/media/lxy/sdd1/stereo_coderesource/dataset_nie/SceneFlowData', help='datapath')
-parser.add_argument('--datapath', default='/data/yyx/data/sceneflow', help='datapath')
+
+parser.add_argument('--datapath', default='/data1/zh/data/sceneflow', help='datapath')
+# parser.add_argument('--datapath', default='/data/yyx/data/sceneflow', help='datapath')
 parser.add_argument('--epoch', type=int, default=50, help='number of epochs to train')
 parser.add_argument('--train_bsize', type=int, default=1,
                     help='batch size for training(default: 1)')
