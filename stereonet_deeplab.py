@@ -39,7 +39,7 @@ parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
 parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-6-25/',
+parser.add_argument('--test_save_path', type=str, default='results/test-6-30/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
 parser.add_argument('--resume', type=str, default='results/8Xmulti/checkpoint.pth', help='resume path')
@@ -241,7 +241,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             all_results = torch.zeros((len(outputs)+2, 1, H, W))
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :]/255.0
-            all_results[-2, 0, :, :] = scoremap_pred[:,:]/255.
+            all_results[-2, 0, :, :] = scoremap_pred[:,:]
             all_results[-1, 0, :, :] = disp_L[0][:, :]/255.0
             # print("save_path",save_path)
             torchvision.utils.save_image(all_results, join(save_path, "iter-%d.jpg" % batch_idx))
