@@ -44,7 +44,7 @@ parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
 parser.add_argument('--test_save_path', type=str, default='results/test-6-30/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='results/8Xmulti/checkpoint_000009.pth', help='resume path')
+parser.add_argument('--resume', type=str, default='results/8Xmulti/checkpoint_000017.pth', help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
