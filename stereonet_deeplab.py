@@ -243,7 +243,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             all_results = torch.zeros((len(outputs)+2, 1, H, W))
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :]/255.0
-            all_results[-2, 0, :, :] = scoremap_pred[:,:]
+            all_results[-2, 0, :, :] = scoremap_pred[:, :]
             all_results[-1, 0, :, :] = disp_L[0][:, :]/255.0
             # print("save_path",save_path)
             torchvision.utils.save_image(all_results, join(save_path, "iter-%d.jpg" % batch_idx))
