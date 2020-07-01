@@ -126,7 +126,7 @@ class MultiScale(nn.Module):
             # max_disp=scoremap_disp*8
             # label=target_0/max_disp*scoremap_disp
             label=target_0/8
-            if output_.shape[0]==label.shape[0]:
+            if len(output_.shape)==len(label.shape[0]):
                 for batch_id in range(output_.shape[0]):
                     semanteme_loss = loss_calc(output_[batch_id,:,:,:], label[batch_id,:,:,:], target_0[batch_id,:,:,:])
             elif output_.shape[0]==1:
