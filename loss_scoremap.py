@@ -159,7 +159,8 @@ def loss_calc(out, label, target):
         bin = Variable(bin).cuda().int()
         res = (bin - label).float()
         
-        W = torch.exp(-0.5*res.mul(res)).float()
+        W = -0.5*res.mul(res).float()
+        W = F.softmax(W,dim=1)
         m = nn.LogSoftmax()
         # m = torch.log2()
         out = torch.where(target_list==0,torch.full_like(out, 1), out)
