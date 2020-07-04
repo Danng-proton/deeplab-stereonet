@@ -126,13 +126,15 @@ class MultiScale(nn.Module):
             # max_disp=scoremap_disp*8
             # label=target_0/max_disp*scoremap_disp
             label=target_0/8
-            if len(output_.shape)==len(label.shape):
-                for batch_id in range(output_.shape[0]):
-                    semanteme_loss = loss_calc(output_[batch_id,:,:,:], label[batch_id,:,:,:], target_0[batch_id,:,:,:])
-            elif output_.shape[0]==1:
-                semanteme_loss = loss_calc(output_[0, :, :, :], label,target_0)
+            # if len(output_.shape)==len(label.shape):
+            #     for batch_id in range(output_.shape[0]):
+            #         semanteme_loss = loss_calc(output_[batch_id,:,:,:], label[batch_id,:,:,:], target_0[batch_id,:,:,:])
+            # elif output_.shape[0]==1:
+            # semanteme_loss = loss_calc(output_[0, :, :, :], label,target_0)
+            semanteme_loss = loss_calc(output_, label, target_0)
             lossvalue += semanteme_loss
-            epevalue += EPE(output_[0,:,:,:], target_0)
+            # epevalue += EPE(output_[0,:,:,:], target_0)
+            epevalue += EPE(output_, target_0)
 #           print '\n\n',lossvalue,'\n\n'
             return [lossvalue, epevalue]
         else:
@@ -144,18 +146,19 @@ def loss_calc(out, label, target):
    
     # out shape batch_size x channels x h x w -> batch_size x channels x h x w
     # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
+
         eps = 1e-5
         #label = label.transpose(3,2,0,1)
         #label = torch.from_numpy(label)
         label = Variable(label).cuda().int()
-        [channels,h,w]=out.shape
+        [batch,channels,h,w]=out.shape
         
-        bin = torch.Tensor(channels,h,w)
+        bin = torch.Tensor(batch,channels,h,w)
         # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
-        target_list = torch.Tensor(channels,h,w).type(torch.cuda.ByteTensor)
+        target_list = torch.Tensor(batch,channels,h,w).type(torch.cuda.ByteTensor)
         for C in range(channels):
-            bin[C,:,:]=C
-            target_list[C,:,:]=target[0,:,:]
+            bin[:,C,:,:]=C
+            target_list[:,C,:,:]=target[:,0,:,:]
         bin = Variable(bin).cuda().int()
         res = (bin - label).float()
         
