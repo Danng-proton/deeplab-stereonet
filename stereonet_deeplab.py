@@ -194,7 +194,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
         # print("gt", disp_L.shape, "output", 0, outputs[0].shape)
         # print("lossshape",loss[0].shape)
 
-        for i in range(1,len(outputs)-1):
+        for i in range(len(outputs)-1):
             # print("gt", disp_L.shape, "output", i, outputs[i].shape)
             loss.append(GERF_loss(disp_L, outputs[i+1], args))
         # print("scoremap", scoremap.shape, "disp_l",disp_L.shape)
