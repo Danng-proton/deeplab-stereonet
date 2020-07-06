@@ -141,8 +141,40 @@ class MultiScale(nn.Module):
             epevalue += EPE(output, target)
             lossvalue += self.loss(output, target)
             return  [lossvalue, epevalue]
-              
+
+
 def loss_calc(out, label, target):
+    # out shape batch_size x channels x h x w -> batch_size x channels x h x w
+    # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
+
+    eps = 1e-5
+    # label = label.transpose(3,2,0,1)
+    # label = torch.from_numpy(label)
+    label = Variable(label).cuda().int()
+    [batch, channels, h, w] = out.shape
+
+    bin = torch.Tensor(batch, channels, h, w)
+    # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
+    target_list = torch.Tensor(batch, channels, h, w).type(torch.cuda.ByteTensor)
+    for C in range(channels):
+        bin[ C, :, :] = C
+        target_list[C, :, :] = target[ 0, :, :]
+    bin = Variable(bin).cuda().int()
+    res = (bin - label).float()
+
+    W = -0.5 * res.mul(res).float()
+    W = F.softmax(W, dim=1)
+    m = nn.LogSoftmax()
+    # m = torch.log2()
+    out = torch.where(target_list == 0, torch.full_like(out, 1), out)
+    # out = torch.log_softmax(out)
+    # out = torch.log(out)
+    # out = m(out)
+    out = torch.log2(out + eps)
+    out = out.mul(W)
+    return -torch.mean(out)
+
+def loss_calc_manybatch(out, label, target):
    
     # out shape batch_size x channels x h x w -> batch_size x channels x h x w
     # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
