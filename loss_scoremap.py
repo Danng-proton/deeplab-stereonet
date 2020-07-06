@@ -130,8 +130,8 @@ class MultiScale(nn.Module):
             #     for batch_id in range(output_.shape[0]):
             #         semanteme_loss = loss_calc(output_[batch_id,:,:,:], label[batch_id,:,:,:], target_0[batch_id,:,:,:])
             # elif output_.shape[0]==1:
-            # semanteme_loss = loss_calc(output_[0, :, :, :], label,target_0)
-            semanteme_loss = loss_calc(output_, label, target_0)
+            semanteme_loss = loss_calc(output_[0, :, :, :], label,target_0)
+            # semanteme_loss = loss_calc(output_, label, target_0)
             lossvalue += semanteme_loss
             # epevalue += EPE(output_[0,:,:,:], target_0)
             epevalue += EPE(output_, target_0)
