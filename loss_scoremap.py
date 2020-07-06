@@ -151,13 +151,13 @@ def loss_calc(out, label, target):
     # label = label.transpose(3,2,0,1)
     # label = torch.from_numpy(label)
     label = Variable(label).cuda().int()
-    [batch, channels, h, w] = out.shape
+    [channels, h, w] = out.shape
 
-    bin = torch.Tensor(batch, channels, h, w)
+    bin = torch.Tensor(channels, h, w)
     # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
-    target_list = torch.Tensor(batch, channels, h, w).type(torch.cuda.ByteTensor)
+    target_list = torch.Tensor(channels, h, w).type(torch.cuda.ByteTensor)
     for C in range(channels):
-        bin[ C, :, :] = C
+        bin[C, :, :] = C
         target_list[C, :, :] = target[ 0, :, :]
     bin = Variable(bin).cuda().int()
     res = (bin - label).float()
