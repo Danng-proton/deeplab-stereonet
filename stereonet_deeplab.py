@@ -44,7 +44,7 @@ parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
 parser.add_argument('--test_save_path', type=str, default='results/test-6-30/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='results/8Xmulti/checkpoint_000017.pth', help='resume path')
+parser.add_argument('--resume', type=str, default='results/8Xmulti/', help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -145,10 +145,10 @@ def main():
 
 
         checkpoint_data = {'epoch': epoch, 'model': model.state_dict(), 'optimizer': optimizer.state_dict()}
-        torch.save(checkpoint_data, "{}/checkpoint_{:0>6}.pth".format(args.save_path, epoch))
+        torch.save(checkpoint_data, "{}/checkpoint_softmax_{:0>6}.pth".format(args.save_path, epoch))
         if args.train:
             #train
-            savefilename = save_path + '/checkpoint-sceneflow.pth'
+            savefilename = save_path + '/checkpoint-softmax-sceneflow.pth'
             torch.save({
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
@@ -243,7 +243,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             all_results = torch.zeros((len(outputs)+2, 1, H, W))
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :]/255.0
-            print(outputs[j][0, :, :]/255.0,scoremap_pred[:, :])
+            # print(outputs[j][0, :, :]/255.0,scoremap_pred[:, :])
             all_results[-2, 0, :, :] = scoremap_pred[:, :]
             all_results[-1, 0, :, :] = disp_L[0][:, :]/255.0
             # print("save_path",save_path)
