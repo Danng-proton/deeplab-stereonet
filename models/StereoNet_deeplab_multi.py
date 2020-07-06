@@ -378,7 +378,7 @@ class StereoNet(nn.Module):
         pred = F.softmax(cost, dim=1)
         pred = disparityregression(disp)(pred)
 
-        score_map_pred = torch.squeeze(score_map_softmax, 1)
+        score_map_pred = torch.squeeze(score_map, 1)
         score_map_pred = disparityregression(disp)(score_map_pred)
 
         
