@@ -247,7 +247,8 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             all_results[-2, 0, :, :] = scoremap_pred[:, :]/255.
             all_results[-1, 0, :, :] = disp_L[0][:, :]/255.0
             # print("save_path",save_path)
-            torchvision.utils.save_image(all_results, join(save_path, "iter-%d.jpg" % batch_idx))
+            # 这边这边
+            # torchvision.utils.save_image(all_results, join(save_path, "iter-%d.jpg" % batch_idx))
             # print(imgL)
             # torchvision.utils.save_image(scoremap, join(save_path, "iter-scoremap-%d.jpg" % batch_idx))
             imgL=imgL.cpu()
@@ -256,7 +257,8 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             # train_logger = SummaryWriter(log_dir=os.path.join(args.save, 'train'), comment='training')
             # validation_logger = SummaryWriter(log_dir=os.path.join(args.save, 'validation'), comment='validation')
 
-            cv.imwrite(join(save_path, "itercolor-%d.jpg" % batch_idx),im)
+            # 这边这边
+            # cv.imwrite(join(save_path, "itercolor-%d.jpg" % batch_idx),im)
 
     info_str = '\t'.join(['Stage {} = {:.2f}'.format(x, losses[x].avg) for x in range(stages)])
     log.info('Average train loss = ' + info_str)
@@ -362,8 +364,10 @@ def test(dataloader, model,save_path, log):
             errormap_scoremap = np.squeeze(errormap_scoremap).numpy().transpose(1,2,0)*255
             # print("errormap_scoremap")
             # print(errormap_scoremap)
-            cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-score-errormap-%d.png" % batch_idx), errormap_scoremap)
 
+            ################
+            cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-score-errormap-%d.png" % batch_idx), errormap_scoremap)
+            ################
     # #kitti
         # test_gt_path=save_path+'/driving_test_gt/'
         # test_pred1_path=save_path+'/driving_test_pred/'
