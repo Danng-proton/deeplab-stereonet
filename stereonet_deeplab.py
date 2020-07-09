@@ -86,7 +86,7 @@ def main():
     __normalize = {'mean': [0.0, 0.0, 0.0], 'std': [1.0, 1.0, 1.0]}
 
     TrainImgLoader = torch.utils.data.DataLoader(
-        DA.myImageFloderDA.myImageFloder(train_left_img, train_right_img, train_left_disp, True, normalize=__normalize),
+        DA.myImageFloder.myImageFloder(train_left_img, train_right_img, train_left_disp, True, normalize=__normalize),
         batch_size=args.train_bsize, shuffle=True, num_workers=4, drop_last=False)
 
     TestImgLoader = torch.utils.data.DataLoader(
