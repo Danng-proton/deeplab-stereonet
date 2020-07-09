@@ -175,8 +175,8 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
     score_loss_funcation = MultiScale(args)
     model.train()
     
-    for batch_idx, (imgL, imgR, disp_L) in enumerate(dataloader):
-        
+    for batch_idx, (imgL, imgR, disp_L, url) in enumerate(dataloader):
+        print(url)
         imgL = imgL.float().cuda()
         imgR = imgR.float().cuda()
         disp_L = disp_L.float().cuda()
