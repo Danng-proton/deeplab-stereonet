@@ -39,12 +39,12 @@ parser.add_argument('--itersize', default=1, type=int,
                     metavar='IS', help='iter size')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
-parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
+parser.add_argument('--save_path', type=str, default='results/709',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-6-30/',
+parser.add_argument('--test_save_path', type=str, default='results/test-709/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='results/8Xmulti/', help='resume path')
+parser.add_argument('--resume', type=str, default='results/709', help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
