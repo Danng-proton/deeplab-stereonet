@@ -82,7 +82,7 @@ def main():
     test_right_img.sort()
     test_left_disp.sort()
     
-
+    print(train_left_img)
 
     __normalize = {'mean': [0.0, 0.0, 0.0], 'std': [1.0, 1.0, 1.0]}
 
