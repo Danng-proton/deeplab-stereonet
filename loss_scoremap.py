@@ -60,17 +60,19 @@ class L2Loss(nn.Module):
         lossvalue = self.loss(output, target)
         epevalue = EPE(output, target)
         return [lossvalue, epevalue]
-       
+
+
 class MultiScale(nn.Module):
-    def __init__(self, args, startScale = 4, numScales = 5, l_weight= 0.64, norm= 'L1'):
-        super(MultiScale,self).__init__()
+    def __init__(self, args, startScale=4, numScales=5, l_weight=0.64, norm='L1'):
+        super(MultiScale, self).__init__()
         self.startScale = startScale
         self.numScales = numScales
-        self.loss_weights = torch.FloatTensor([(l_weight / 2 ** scale) for scale in range(self.numScales)]).cuda() ################################Expected object of type torch.FloatTensor but found type torch.cuda.FloatTensor for argument #3 'other'
+        self.loss_weights = torch.FloatTensor([(l_weight / 2 ** scale) for scale in range(
+            self.numScales)]).cuda()  ################################Expected object of type torch.FloatTensor but found type torch.cuda.FloatTensor for argument #3 'other'
         self.args = args
         self.l_type = norm
         self.div_flow = 1
-        assert(len(self.loss_weights) == self.numScales)
+        assert (len(self.loss_weights) == self.numScales)
 
         if self.l_type == 'L1':
             self.loss = L1()
@@ -79,24 +81,24 @@ class MultiScale(nn.Module):
 
         # self.multiScales = [nn.MaxPool2d(self.startScale * (2**scale), self.startScale * (2**scale)) for scale in range(self.numScales)]
         # self.multiScales = [nn.UpsamplingNearest2d(scale_factor = 1./(self.startScale * (2**scale))) for scale in range(self.numScales)]
-        self.loss_labels = ['MultiScale-'+self.l_type, 'EPE'],
+        self.loss_labels = ['MultiScale-' + self.l_type, 'EPE'],
 
     def forward(self, output, target):
         lossvalue = 0
         epevalue = 0
-        
+
         ###get classification label
         # kitti max 230 sceneflow max 300
-        #label=target/328*41
+        # label=target/328*41
         # interp = nn.UpsamplingBilinear2d(size =(output[5].shape[2],output[5].shape[3]))
         # label=interp(label)
-        #interp = nn.Upsample(size =(target.shape[2], target.shape[3]), mode='nearest')
+        # interp = nn.Upsample(size =(target.shape[2], target.shape[3]), mode='nearest')
         # LR consistency loss
-        #lossvalue += loss_lr(data, output, target)
+        # lossvalue += loss_lr(data, output, target)
 
         if type(output) is not tuple:
             target = self.div_flow * target
-            output_=output
+            output_ = output
             # target_0 = np.zeros((1,output_.shape[2], output_.shape[3]))
             # print(type(target))
             # target=torch.squeeze(target)
@@ -112,35 +114,63 @@ class MultiScale(nn.Module):
             # np.expand_dims(target, 1)
             # print(type(target))
             target = F.interpolate(
-                    (torch.unsqueeze(target,1)),
-                    size=[output_.shape[-2],output_.shape[-1]],
-                    mode='bilinear',
-                    align_corners=False)
+                (torch.unsqueeze(target, 1)),
+                size=[output_.shape[-2], output_.shape[-1]],
+                mode='bilinear',
+                align_corners=False)
             # target = np.expand_dims(target, 0)
             # # target = np.expand_dims(target, 0)
             # target_0 = torch.from_numpy(target)
             # target_0=Variable(target_0).cuda()
-            target_0 = Variable(target[0]).cuda()
+            target_0 = Variable(target).cuda()
             # scoremap_disp=output_.shape[1]
             # # print("scoremap_disp",scoremap_disp.shape(),scoremap_disp.shape())
             # max_disp=scoremap_disp*8
             # label=target_0/max_disp*scoremap_disp
-            label=target_0/8
+            label = target_0 / 8
             # if len(output_.shape)==len(label.shape):
             #     for batch_id in range(output_.shape[0]):
             #         semanteme_loss = loss_calc(output_[batch_id,:,:,:], label[batch_id,:,:,:], target_0[batch_id,:,:,:])
             # elif output_.shape[0]==1:
-            semanteme_loss = loss_calc(output_[0, :, :, :], label,target_0)
+            semanteme_loss = loss_calc_soft(output[:, :, :, :], label, target_0)
             # semanteme_loss = loss_calc(output_, label, target_0)
             lossvalue += semanteme_loss
+            # print("output",torch.mean(output),"target",torch.mean(target))
             # epevalue += EPE(output_[0,:,:,:], target_0)
             epevalue += EPE(output_, target_0)
-#           print '\n\n',lossvalue,'\n\n'
+            #           print '\n\n',lossvalue,'\n\n'
             return [lossvalue, epevalue]
         else:
             epevalue += EPE(output, target)
             lossvalue += self.loss(output, target)
-            return  [lossvalue, epevalue]
+            return [lossvalue, epevalue]
+
+
+def loss_calc_soft(out, label, target):
+    # type: (object, object, object) -> object
+
+    # out shape batch_size x channels x h x w -> batch_size x channels x h x w
+    # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
+
+    # label = label.transpose(3,2,0,1)
+    # label = torch.from_numpy(label)
+    label = Variable(label).cuda().int()
+    [batch, channels, h, w] = out.shape
+    bin = torch.Tensor(batch, channels, h, w)
+    target_list = torch.Tensor(batch, channels, h, w).type(torch.cuda.ByteTensor)
+    for C in range(channels):
+        bin[:, C, :, :] = C
+        target_list[:, C, :, :] = target[:, 0, :, :]
+    bin = Variable(bin).cuda().int()
+    res = (bin - label).float()
+    W = torch.exp(-0.5 * res.mul(res)).float()
+    # print("out", torch.mean(out))
+    out = torch.where(target_list == 0, torch.full_like(out, 1), out)
+    out = torch.log2(out + (0.00000000001))
+    W = F.softmax(W, dim=1)
+    # print("out", torch.mean(out))
+    out = out.mul(W)
+    return -torch.mean(out)
 
 
 def loss_calc(out, label, target):
