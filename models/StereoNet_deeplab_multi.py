@@ -378,7 +378,7 @@ class StereoNet(nn.Module):
         pred = F.softmax(cost, dim=1)
         pred = disparityregression(disp)(pred)
 
-        score_map_pred = disparityregression(disp)(score_map_pred)
+        score_map_pred = disparityregression(disp)(score_map)
 
         img_pyramid_list = []
 
