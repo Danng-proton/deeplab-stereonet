@@ -59,7 +59,7 @@ parser.add_argument('--stepsize', default=1, type=int,
                     metavar='SS', help='learning rate step size')
 parser.add_argument('--gamma', '--gm', default=0.6, type=float,
                     help='learning rate decay parameter: Gamma')
-parser.add_argument('--print_freq', type=int, default=1, help='print frequence')
+parser.add_argument('--print_freq', type=int, default=100, help='print frequence')
 parser.add_argument('--train', action='store_true')
 parser.add_argument('--print_maps', action='store_true')
 parser.add_argument('--stages', type=int, default=4, help='the stage num of refinement')
