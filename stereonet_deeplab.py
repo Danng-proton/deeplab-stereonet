@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from tensorboardX import SummaryWriter
 import time
 from dataloader import listflowfile as lt
-from dataloader import SecenFlowLoader as DA
+from dataloader import KITTIloader2015 as DA
 import utils.logger as logger
 import utils.visualization as visualization
 from utils.utils import GERF_loss, smooth_L1_loss
@@ -32,7 +32,7 @@ parser.add_argument('--loss_weights', type=float, nargs='+', default=[1.0, 1.0, 
 # parser.add_argument('--datapath', default='/media/lxy/sdd1/stereo_coderesource/dataset_nie/SceneFlowData', help='datapath')
 
 # parser.add_argument('--datapath', default='/data1/zh/data/sceneflow', help='datapath')
-parser.add_argument('--datapath', default='/data/yyx/data/sceneflow', help='datapath')
+parser.add_argument('--datapath', default='/data/yyx/data/kitti/2015', help='datapath')
 parser.add_argument('--epoch', type=int, default=50, help='number of epochs to train')
 parser.add_argument('--train_bsize', type=int, default=1,
                     help='batch size for training(default: 1)')
