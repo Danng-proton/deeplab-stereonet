@@ -45,7 +45,7 @@ parser.add_argument('--save_path', type=str, default='results/train-7-12/',
 parser.add_argument('--test_save_path', type=str, default='results/test-7-12/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='results/train-7-12/checkpoint-softmax-sceneflow-712.pth',
+parser.add_argument('--resume', type=str, default='results/train-7-12/checkpoint_2020_07_16_softmax__000003.pth',
                     help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 parser.add_argument('--score_lr', type=float, default=2, help='score learning rate')
