@@ -24,6 +24,7 @@ from os.path import join, split, isdir, isfile, splitext, split, abspath, dirnam
 import cv2 as cv
 import numpy as np
 from loss_scoremap import MultiScale
+import datetime
 
 parser = argparse.ArgumentParser(description='StereoNet_deeplab with sceneflow')
 parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
@@ -39,13 +40,14 @@ parser.add_argument('--itersize', default=1, type=int,
                     metavar='IS', help='iter size')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
-parser.add_argument('--save_path', type=str, default='results/8Xmulti/',
+parser.add_argument('--save_path', type=str, default='results/train-7-12/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-6-30/',
+parser.add_argument('--test_save_path', type=str, default='results/test-7-12/',
                     help='the path of saving checkpoints and log when testing')
 # 'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='results/8Xmulti/', help='resume path')
+parser.add_argument('--resume', type=str, default='results/train-7-12/checkpoint-softmax-sceneflow-712.pth', help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
+parser.add_argument('--score_lr', type=float, default=2, help='score learning rate')
 
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 
@@ -56,7 +58,7 @@ parser.add_argument('--stepsize', default=1, type=int,
                     metavar='SS', help='learning rate step size')
 parser.add_argument('--gamma', '--gm', default=0.6, type=float,
                     help='learning rate decay parameter: Gamma')
-parser.add_argument('--print_freq', type=int, default=100, help='print frequence')
+parser.add_argument('--print_freq', type=int, default=1, help='print frequence')
 parser.add_argument('--train', action='store_true')
 parser.add_argument('--print_maps', action='store_true')
 parser.add_argument('--stages', type=int, default=4, help='the stage num of refinement')
@@ -100,7 +102,7 @@ def main():
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
-    log = logger.setup_logger(save_path + '/619sceneflow-test.log')################3training
+    log = logger.setup_logger(save_path + '/712sceneflow-test.log')################3training
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ':' + str(value))
 
@@ -124,8 +126,8 @@ def main():
             log.info("=> loading checkpoint '{}'".format((args.resume)))
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch'] +1
-            # model.load_state_dict(checkpoint['state_dict'])
-            model.load_state_dict(checkpoint['model'])
+            model.load_state_dict(checkpoint['state_dict'])
+            # model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             log.info("=> loaded checkpoint '{}' (epoch {})"
                     .format(args.resume, checkpoint['epoch']))
@@ -143,12 +145,13 @@ def main():
             # train
             train(TrainImgLoader, model,save_path, optimizer, log, epoch)
 
-
+        datenow=datetime.datetime.now().strftime('%Y_%m_%d')
+        dateload=datetime.datetime.now().strftime('%m%d')
         checkpoint_data = {'epoch': epoch, 'model': model.state_dict(), 'optimizer': optimizer.state_dict()}
-        torch.save(checkpoint_data, "{}/checkpoint_softmax_{:0>6}.pth".format(args.save_path, epoch))
+        torch.save(checkpoint_data, "{}/checkpoint_{}_softmax__{:0>6}.pth".format(args.save_path,datenow, epoch))
         if args.train:
             #train
-            savefilename = save_path + '/checkpoint-softmax-sceneflow.pth'
+            savefilename = save_path + '/checkpoint-softmax-sceneflow-{}.pth'.format(dateload)
             torch.save({
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
@@ -165,7 +168,7 @@ def main():
 
 
 
-def train(dataloader, model,save_path,optimizer, log, epoch=0):
+def train(dataloader, model,save_path,optimizer, log, epoch=0,):
 
     stages = args.stages
     losses = [AverageMeter() for _ in range(stages)]
@@ -176,7 +179,8 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
     model.train()
     
     for batch_idx, (imgL, imgR, disp_L) in enumerate(dataloader):
-        
+
+        # print(path)
         imgL = imgL.float().cuda()
         imgR = imgR.float().cuda()
         disp_L = disp_L.float().cuda()
@@ -200,10 +204,14 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
         # print("scoremap", scoremap.shape, "disp_l",disp_L.shape)
         loss_score = score_loss_funcation(scoremap, disp_L)
         # print("loss_score",loss_score)
-        loss.append(loss_score[0])
+        loss.append(loss_score[0]*args.score_lr)
 
         counter +=1
-        loss_all = sum(loss)/(args.itersize)
+        if loss_score[0]<0.3:
+            loss_all = sum(loss)/(args.itersize)
+        #############
+        else:
+            loss_all=loss_score[0]
         loss_all.backward()#反向传播
         if counter == args.itersize:
             optimizer.step()
@@ -212,7 +220,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
 
         for idx in range(stages):
             losses[idx].update(loss[idx].item()/args.loss_weights[idx])
-        loss_scoremap[0].update(loss_score[1].item())
+        loss_scoremap[0].update(loss_score[0].item())
 
         writer.add_scalar('train_loss_all', loss_all, epoch)
         writer.add_scalar('train_loss_score', loss_score[0], epoch)
@@ -244,11 +252,11 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :]/255.0
             # print(outputs[j][0, :, :]/255.0,scoremap_pred[:, :])
-            all_results[-2, 0, :, :] = scoremap_pred[:, :]/255.
+            all_results[-2, 0, :, :] = scoremap_pred[:, :]*13/255.
             all_results[-1, 0, :, :] = disp_L[0][:, :]/255.0
             # print("save_path",save_path)
             # 这边这边
-            # torchvision.utils.save_image(all_results, join(save_path, "iter-%d.jpg" % batch_idx))
+            torchvision.utils.save_image(all_results, join(save_path, "iter-%d.jpg" % batch_idx))
             # print(imgL)
             # torchvision.utils.save_image(scoremap, join(save_path, "iter-scoremap-%d.jpg" % batch_idx))
             imgL=imgL.cpu()
@@ -258,7 +266,7 @@ def train(dataloader, model,save_path,optimizer, log, epoch=0):
             # validation_logger = SummaryWriter(log_dir=os.path.join(args.save, 'validation'), comment='validation')
 
             # 这边这边
-            # cv.imwrite(join(save_path, "itercolor-%d.jpg" % batch_idx),im)
+            cv.imwrite(join(save_path, "itercolor-%d.jpg" % batch_idx),im)
 
     info_str = '\t'.join(['Stage {} = {:.2f}'.format(x, losses[x].avg) for x in range(stages)])
     log.info('Average train loss = ' + info_str)
@@ -274,7 +282,7 @@ def test(dataloader, model,save_path, log):
 
 
     length_loader = len(dataloader)
-
+    # print(length_loader)
     model.eval()
     # model.train()
 
@@ -292,6 +300,7 @@ def test(dataloader, model,save_path, log):
         with torch.no_grad():
             outputs = model(imgL, imgR)
             scoremap_pred =outputs.pop(-1)
+            score_map_softmax = outputs.pop(-1)
             for x in range(stages):
             
                 if len(disp_L[mask]) == 0:
@@ -310,25 +319,26 @@ def test(dataloader, model,save_path, log):
 
         disp_ests = outputs[:stages]
         scoremap = scoremap_pred
+        # print("before print_maps")
         if args.print_maps:
             # print("print maps")
             # sceneflow
-            test_gt_path = save_path + '/driving_test_gt/'
+            test_gt_path = save_path + 'driving_test_gt/'
             if not os.path.exists(test_gt_path):
                 os.makedirs(test_gt_path)
-            test_pred1_path = save_path + '/driving_test_pred/'
+            test_pred1_path = save_path + 'driving_test_pred/'
             if not os.path.exists(test_pred1_path):
                 os.makedirs(test_pred1_path)
-            test_pred1_scoremap = save_path + '/driving_test_scoremap/'
+            test_pred1_scoremap = save_path + 'driving_test_scoremap/'
             if not os.path.exists(test_pred1_scoremap):
                 os.makedirs(test_pred1_scoremap)
-            test_pred1_errormap_pred1 = save_path + '/driving_test_errormap_pred/'
+            test_pred1_errormap_pred1 = save_path + 'driving_test_errormap_pred/'
             if not os.path.exists(test_pred1_errormap_pred1):
                 os.makedirs(test_pred1_errormap_pred1)
-            test_pred1_errormap_scoremap = save_path + '/driving_test_errormap_scoremap/'
+            test_pred1_errormap_scoremap = save_path + 'driving_test_errormap_scoremap/'
             if not os.path.exists(test_pred1_errormap_scoremap):
                 os.makedirs(test_pred1_errormap_scoremap)
-
+            # print(test_gt_path)
             _, H, W = disp_ests[0].shape
             gt = torch.zeros((H, W))
             im_pred1 = torch.zeros((H, W))
@@ -338,7 +348,7 @@ def test(dataloader, model,save_path, log):
             # print(disp_gt.shape)
             cv.imwrite(join(test_gt_path, "sceneflow-gt-%d.png" % batch_idx), gt*255)
 
-            im_pred1 = np.array(disp_ests[2][0, :, :].cpu(), dtype=np.uint16)
+            im_pred1 = np.array(disp_ests[3][0, :, :].cpu(), dtype=np.uint16)
             # print(im_pred1.shape)
             cv.imwrite(join(test_pred1_path, "sceneflow-pred-%d.png" % batch_idx), im_pred1*255)
             # print ("im_pred1................",im_pred1.shape,type(im_pred1))
@@ -349,8 +359,8 @@ def test(dataloader, model,save_path, log):
             # print(im_scoremap.shape)
             # print(im_scoremap.dtype)
             cv.imwrite(join(test_pred1_scoremap, "sceneflow-scoremap-%d.png" % batch_idx), im_scoremap*255)
-
-            errormap_pred1 = visual(disp_ests[2][:, :, :].cpu(), disp_gt[:, :, :].cpu())
+            # --------------------
+            errormap_pred1 = visual(disp_ests[3][:, :, :].cpu(), disp_gt[:, :, :].cpu())
             # print ("errormap_pred1................", type(errormap_pred1))
             errormap_pred1 = np.squeeze(errormap_pred1).numpy().transpose(1,2,0)*255
             # print("errormap_pred1")
@@ -360,6 +370,7 @@ def test(dataloader, model,save_path, log):
             _, size_w, size_h = scoremap.shape
             disp_gt_resized = cv.resize(disp_gt[0,:,:].cpu().numpy(), (size_h,size_w), interpolation=cv.INTER_AREA)
             disp_gt_resized=torch.unsqueeze(torch.from_numpy(disp_gt_resized),0)
+            # --------------------
             errormap_scoremap = visual(scoremap[:, :, :].cpu(), disp_gt_resized[:, :, :].cpu())
             errormap_scoremap = np.squeeze(errormap_scoremap).numpy().transpose(1,2,0)*255
             # print("errormap_scoremap")

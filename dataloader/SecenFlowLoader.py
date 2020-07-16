@@ -24,6 +24,7 @@ def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
 
+
 def default_loader(path):
     return Image.open(path).convert('RGB')
     #return Image.open(path).convert('L')
@@ -84,7 +85,8 @@ class myImageFloder(data.Dataset):
                  training,
                  normalize,
                  loader=default_loader,
-                 dploader=disparity_loader):
+                 dploader=disparity_loader
+                 ):
 
         self.left = left
         self.right = right

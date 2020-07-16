@@ -361,6 +361,7 @@ class StereoNet(nn.Module):
         # print("******************cost:",cost.shape)
         # score_reshape = torch.FloatTensor(cost.size()).zero_().cuda()
         # print("******************score:", score_map.shape)
+        #score_map:B,C,W,H/B,D,W,H
         score_map_softmax= F.softmax(score_map, dim=1)
         # print("******************score_softmax:", score_map_softmax.shape)
         score_map_softmax_adddim1=torch.unsqueeze(score_map_softmax,1)
@@ -378,7 +379,6 @@ class StereoNet(nn.Module):
         pred = F.softmax(cost, dim=1)
         pred = disparityregression(disp)(pred)
 
-        score_map_pred = torch.squeeze(score_map, 1)
         score_map_pred = disparityregression(disp)(score_map_pred)
 
         
