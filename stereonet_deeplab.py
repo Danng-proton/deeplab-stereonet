@@ -124,8 +124,8 @@ def main():
             log.info("=> loading checkpoint '{}'".format((args.resume)))
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch'] + 1
-            model.load_state_dict(checkpoint['state_dict'])
-            # model.load_state_dict(checkpoint['model'])
+            # model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             log.info("=> loaded checkpoint '{}' (epoch {})"
                      .format(args.resume, checkpoint['epoch']))
