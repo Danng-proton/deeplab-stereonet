@@ -40,11 +40,11 @@ parser.add_argument('--itersize', default=1, type=int,
                     metavar='IS', help='iter size')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
-parser.add_argument('--save_path', type=str, default='results/train-7-12/',
+parser.add_argument('--save_path', type=str, default='results/train-7-17/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-7-12/',
+parser.add_argument('--test_save_path', type=str, default='results/test-7-17/',
                     help='the path of saving checkpoints and log when testing')
-#    'results/8Xmulti/checkpoint_512_sceneflow_only.pth'
+#    'results/8Xmulti/checkpoint_517_sceneflow_only.pth'
 parser.add_argument('--resume', type=str, default='results/train-7-12/checkpoint_2020_07_16_softmax__000003.pth',
                     help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
@@ -102,7 +102,7 @@ def main():
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
-    log = logger.setup_logger(save_path + '/712sceneflow-test.log')  ################3training
+    log = logger.setup_logger(save_path + '/717sceneflow-test.log')  ################3training
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ':' + str(value))
 
@@ -184,6 +184,7 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
         outputs = model(imgL, imgR)
 
         scoremap_pred = outputs.pop(-1)  # torch.Size([1, 68, 120])
+        scoremap_pred = scoremap_pred*8
         scoremap = outputs.pop(-1)
         # print("scoremap",scoremap_origin.shape,"scoremap pred",scoremap.shape)
         outputs = [torch.squeeze(output, 1) for output in outputs]
