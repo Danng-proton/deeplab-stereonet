@@ -170,6 +170,9 @@ def loss_calc_unsofted(out, label, target):
     m = nn.LogSoftmax()
     out = torch.where(target_list == 0, torch.full_like(out, 1), out)
     out = m(out)
+    W=F.softmax(W,dim=1)
+    # print("------------",max(W[0,:,50,50]),max(W[0,:,50,100]),max(W[0,:,50,70]))
+
     out = out.mul(W)
     return -torch.mean(out)
 

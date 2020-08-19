@@ -40,13 +40,14 @@ parser.add_argument('--itersize', default=1, type=int,
                     metavar='IS', help='iter size')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
-parser.add_argument('--save_path', type=str, default='results/train-7-17/',
+parser.add_argument('--save_path', type=str, default='results/train-8-18/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-7-17/',
+parser.add_argument('--test_save_path', type=str, default='results/test-8-18/',
                     help='the path of saving checkpoints and log when testing')
 #    'results/8Xmulti/checkpoint_517_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='results/train-7-12/checkpoint_2020_07_16_softmax__000003.pth',
-                    help='resume path')
+parser.add_argument('--resume', type=str, default='',help='resume path')
+# parser.add_argument('--resume', type=str, default='results/train-8-18/checkpoint_2020_07_29_softmax__000037.pth',
+#                     help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 parser.add_argument('--score_lr', type=float, default=2, help='score learning rate')
 
@@ -102,7 +103,7 @@ def main():
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
-    log = logger.setup_logger(save_path + '/717sceneflow-test.log')  ################3training
+    log = logger.setup_logger(save_path + '/818sceneflow-test.log')  ################3training
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ':' + str(value))
 
@@ -247,7 +248,7 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :] / 255.0
             # print(outputs[j][0, :, :]/255.0,scoremap_pred[:, :])
-            all_results[-2, 0, :, :] = scoremap_pred[:, :] * 13 / 255.
+            all_results[-2, 0, :, :] = scoremap_pred[:, :] / 255.
             all_results[-1, 0, :, :] = disp_L[0][:, :] / 255.0
             # print("save_path",save_path)
             # 这边这边
@@ -293,7 +294,7 @@ def test(dataloader, model, save_path, log):
 
         with torch.no_grad():
             outputs = model(imgL, imgR)
-            scoremap_pred = outputs.pop(-1)
+            scoremap_pred = outputs.pop(-1)*8
             score_map_softmax = outputs.pop(-1)
             for x in range(stages):
 
@@ -306,7 +307,6 @@ def test(dataloader, model, save_path, log):
 
         # if batch_idx%100==0:
         info_str = '\t'.join(['Stage {} = {:.2f}({:.2f})'.format(x, EPES[x].val, EPES[x].avg) for x in range(stages)])
-
         log.info('[{}/{}] {}'.format(
             batch_idx, length_loader, info_str))
 
@@ -352,26 +352,57 @@ def test(dataloader, model, save_path, log):
             # print(im_scoremap.shape)
             # print(im_scoremap.dtype)
             cv.imwrite(join(test_pred1_scoremap, "sceneflow-scoremap-%d.png" % batch_idx), im_scoremap * 255)
+
+            # _, H, W = disp_L.shape
+            # scoremap_pred = F.interpolate(
+            #     (torch.unsqueeze(scoremap, 1)),
+            #     size=[H, W],
+            #     mode='bilinear',
+            #     align_corners=False)
+            # all_results = torch.zeros((len(outputs) + 2, 1, H, W))
+            # for j in range(len(outputs)):
+            #     all_results[j, 0, :, :] = outputs[j][0, :, :] / 255.0
+            # all_results[-2, 0, :, :] = scoremap_pred[0, :, :] / 255.0  # ?
+            # all_results[-1, 0, :, :] = disp_L[0][:, :] / 255.0  # 【0-255】-》【0-1】
+            # torchvision.utils.save_image(all_results, join(save_path, "iter-est-%d.jpg" % batch_idx))
+
             # --------------------
             errormap_pred1 = visual(disp_ests[3][:, :, :].cpu(), disp_gt[:, :, :].cpu())
-            # print ("errormap_pred1................", type(errormap_pred1))
-            errormap_pred1 = np.squeeze(errormap_pred1).numpy().transpose(1, 2, 0) * 255
+            # print ("errormap_pred1................",errormap_pred1.shape ,type(errormap_pred1))
+            # errormap_pred1 = np.squeeze(errormap_pred1).numpy().transpose(0,1, 2) * 255
+            # print("errormap_pred2................",errormap_pred1.shape, type(errormap_pred1))
             # print("errormap_pred1")
             # print(errormap_pred1)
-            cv.imwrite(join(test_pred1_errormap_pred1, "sceneflow-pred-errormap-%d.png" % batch_idx), errormap_pred1)
+            torchvision.utils.save_image(errormap_pred1,
+                                         join(test_pred1_errormap_pred1, "sceneflow-pred-errormap-%d.jpg" % batch_idx))
+
+            # torchvision.utils.save_image(torch.tensor(errormap_pred1), join(test_pred1_errormap_pred1, "sceneflow-score-errormap-%d.jpg" % batch_idx))
+            # cv.imwrite(join(test_pred1_errormap_pred1, "sceneflow-pred-errormap-%d.png" % batch_idx), errormap_pred1)
 
             _, size_w, size_h = scoremap.shape
             disp_gt_resized = cv.resize(disp_gt[0, :, :].cpu().numpy(), (size_h, size_w), interpolation=cv.INTER_AREA)
             disp_gt_resized = torch.unsqueeze(torch.from_numpy(disp_gt_resized), 0)
+
+            disp_gt_0=F.interpolate(torch.unsqueeze(disp_L,0),size=(size_w, size_h),mode='bilinear')
+            disp_gt_0=torch.squeeze(disp_gt_0,0)
             # --------------------
+            disp_gt_resized=torch.tensor(disp_gt_resized)
+            print("----===------",type(scoremap_pred),type(disp_gt_resized.shape))
+            print(scoremap_pred.shape,disp_gt_0.shape)
+            scoremap_epe = torch.norm(scoremap_pred-disp_gt_0,p=2).mean()
+            print("-----------------scoremap_epe", scoremap_epe)
+
             errormap_scoremap = visual(scoremap[:, :, :].cpu(), disp_gt_resized[:, :, :].cpu())
-            errormap_scoremap = np.squeeze(errormap_scoremap).numpy().transpose(1, 2, 0) * 255
+            # print("errormap_scoremap................", errormap_scoremap.shape, type(errormap_scoremap))
+            torchvision.utils.save_image(torch.tensor(errormap_scoremap), join(test_pred1_errormap_scoremap,
+                                                                               "sceneflow-score-errormap-%d.jpg" % batch_idx))
+            # errormap_scoremap = np.squeeze(errormap_scoremap).numpy().transpose(1, 2, 0) * 255
             # print("errormap_scoremap")
             # print(errormap_scoremap)
 
-            ################
-            cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-score-errormap-%d.png" % batch_idx),
-                       errormap_scoremap)
+            # ################
+            # cv.imwrite(join(test_pred1_errormap_scoremap, "sceneflow-score-errormap-%d.png" % batch_idx),
+            #            errormap_scoremap)
             ################
     # #kitti
     # test_gt_path=save_path+'/driving_test_gt/'
