@@ -337,83 +337,45 @@ class StereoNet(nn.Module):
         # ----------------------deeplab--------------------------------
 
 
-        refimg_feature = self.feature_extraction(left)
-        targetimg_feature = self.feature_extraction(right)
+        # refimg_feature = self.feature_extraction(left)
+        # targetimg_feature = self.feature_extraction(right)
         # print("left_feature")
         # print(refimg_feature)
 
         # matching
-        cost = torch.FloatTensor(refimg_feature.size()[0], #batch
-                                 refimg_feature.size()[1], #通道
-                                 disp,
-                                 refimg_feature.size()[2],#w
-                                 refimg_feature.size()[3]).zero_().cuda()#h
-        for i in range(disp):
-            if i > 0:
-                cost[:, :, i, :, i:] = refimg_feature[ :, :, :, i:] - targetimg_feature[:, :, :, :-i]
 
-            else:
-                cost[:, :, i, :, :] = refimg_feature - targetimg_feature
 
         # print("cost")
         # print(cost)
-        cost = cost.contiguous()
+
         # print("******************cost:",cost.shape)
         # score_reshape = torch.FloatTensor(cost.size()).zero_().cuda()
         # print("******************score:", score_map.shape)
+        # print(score_map.shape)
         score_map_softmax= F.softmax(score_map, dim=1)
+        # print(torch.mean(score_map_softmax))
         # print("******************score_softmax:", score_map_softmax.shape)
-        score_map_softmax_adddim1=torch.unsqueeze(score_map_softmax,1)
-        # print("******************score_softmax:", score_map_softmax_adddim1.shape)
-        score_reshape=score_map_softmax_adddim1.repeat(1,refimg_feature.size()[1],1,1,1)
+        # score_map_softmax_adddim1=torch.unsqueeze(score_map_softmax,1)
+        # # print("******************score_softmax:", score_map_softmax_adddim1.shape)
+        # score_reshape=score_map_softmax_adddim1.repeat(1,refimg_feature.size()[1],1,1,1)
 
         # for channal_id in range(refimg_feature.size()[1]):
         #     score_reshape[:,channal_id,:,:,:]=score_map_softmax[:,0,:,:,:]
-        out_corr = torch.mul(score_reshape, cost)
+        # out_corr = torch.mul(score_reshape, cost)
 
-        for f in self.filter:
-            cost = f(out_corr)
-        cost = self.conv3d_alone(cost)
-        cost = torch.squeeze(cost, 1)
-        pred = F.softmax(cost, dim=1)
-        pred = disparityregression(disp)(pred)
+        # for f in self.filter:
+        #     cost = f(out_corr)
+        # cost = self.conv3d_alone(cost)
+        # cost = torch.squeeze(cost, 1)
+        # pred = F.softmax(cost, dim=1)
+        # pred = disparityregression(disp)(pred)
 
-        score_map_pred = torch.squeeze(score_map, 1)
+        score_map_pred = torch.squeeze(score_map_softmax, 1)
         score_map_pred = disparityregression(disp)(score_map_pred)
 
         
         img_pyramid_list = []
-        
-        for i in range(self.r):
-            img_pyramid_list.append(F.interpolate(
-                            left,
-                            scale_factor=1 / pow(2, i),
-                            mode='bilinear',
-                            align_corners=False))
-
-        img_pyramid_list.reverse()
-
-
-        pred_pyramid_list= [pred]
-
-        for i in range(self.r):
-            # start = datetime.datetime.now()
-            pred_pyramid_list.append(self.edge_aware_refinements[i](
-                        pred_pyramid_list[i], img_pyramid_list[i]))
-
-        length_all = len(pred_pyramid_list)
-
-
-        for i in range(length_all):
-            pred_pyramid_list[i] = pred_pyramid_list[i]* (
-                left.size()[-1] / pred_pyramid_list[i].size()[-1])
-            pred_pyramid_list[i] = torch.squeeze(
-            F.interpolate(
-                torch.unsqueeze(pred_pyramid_list[i], dim=1),
-                size=left.size()[-2:],
-                mode='bilinear',
-                align_corners=False),
-            dim=1)
+        pred_pyramid_list = []
         pred_pyramid_list.append(score_map_softmax)
         # print ("score_pred...........",score_map_pred.shape)
         pred_pyramid_list.append(score_map_pred)

@@ -1,2 +1,0 @@
-# deeplab-stereonet
-deeplab-stereonet

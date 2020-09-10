@@ -120,7 +120,7 @@ class MultiScale(nn.Module):
             # # target = np.expand_dims(target, 0)
             # target_0 = torch.from_numpy(target)
             # target_0=Variable(target_0).cuda()
-            target_0 = Variable(target[0]).cuda()
+            target_0 = Variable(target).cuda()
             # scoremap_disp=output_.shape[1]
             # # print("scoremap_disp",scoremap_disp.shape(),scoremap_disp.shape())
             # max_disp=scoremap_disp*8
@@ -130,7 +130,7 @@ class MultiScale(nn.Module):
             #     for batch_id in range(output_.shape[0]):
             #         semanteme_loss = loss_calc(output_[batch_id,:,:,:], label[batch_id,:,:,:], target_0[batch_id,:,:,:])
             # elif output_.shape[0]==1:
-            semanteme_loss = loss_calc(output_[0, :, :, :], label,target_0)
+            semanteme_loss = loss_calc_soft(output[:, :, :, :], label,target_0)
             # semanteme_loss = loss_calc(output_, label, target_0)
             lossvalue += semanteme_loss
             # epevalue += EPE(output_[0,:,:,:], target_0)
@@ -143,7 +143,61 @@ class MultiScale(nn.Module):
             return  [lossvalue, epevalue]
 
 
+def loss_calc_soft(out, label, target):
+    # type: (object, object, object) -> object
+
+    # out shape batch_size x channels x h x w -> batch_size x channels x h x w
+    # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
+
+    # label = label.transpose(3,2,0,1)
+    # label = torch.from_numpy(label)
+    label = Variable(label).cuda().int()
+    [batch,channels, h, w] = out.shape
+    bin = torch.Tensor(batch,channels, h, w)
+    target_list = torch.Tensor(batch,channels, h, w).type(torch.cuda.ByteTensor)
+    for C in range(channels):
+        bin[:, C, :, :] = C
+        target_list[:, C, :, :] = target[:, 0, :, :]
+    bin = Variable(bin).cuda().int()
+    res = (bin - label).float()
+    W = torch.exp(-0.5 * res.mul(res)).float()
+    out = torch.where(target_list == 0, torch.full_like(out, 1), out)
+    out = torch.log2(out+(0.00000000001))
+    W = F.softmax(W, dim=1)
+    out = out.mul(W)
+    return -torch.mean(out)
+
 def loss_calc(out, label, target):
+    # type: (object, object, object) -> object
+
+    # out shape batch_size x channels x h x w -> batch_size x channels x h x w
+    # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
+
+    # label = label.transpose(3,2,0,1)
+    # label = torch.from_numpy(label)
+    label = Variable(label).cuda().int()
+    [channels, h, w] = out.shape
+
+    bin = torch.Tensor(channels, h, w)
+    # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
+    target_list = torch.Tensor(channels, h, w).type(torch.cuda.ByteTensor)
+    for C in range(channels):
+        bin[C, :, :] = C
+        target_list[C, :, :] = target[0, :, :]
+    bin = Variable(bin).cuda().int()
+    res = (bin - label).float()
+
+    W = torch.exp(-0.5 * res.mul(res)).float()
+    m = nn.LogSoftmax()
+    out = torch.where(target_list == 0, torch.full_like(out, 1), out)
+    out = m(out)
+    print(torch.mean(out))
+    out = out.mul(W)
+    print(torch.mean(w))
+    print(torch.mean(out))
+    return -torch.mean(out)
+
+def loss_calc_softmax(out, label, target):
     # out shape batch_size x channels x h x w -> batch_size x channels x h x w
     # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
 
