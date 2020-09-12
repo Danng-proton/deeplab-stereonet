@@ -362,20 +362,23 @@ class StereoNet(nn.Module):
         # print("******************score:", score_map.shape)
         # score_map:B,C,W,H/B,D,W,H
         score_map_softmax = F.softmax(score_map, dim=1)
-        # print("******************score_softmax:", score_map_softmax.shape)
-        score_map_softmax_adddim1 = torch.unsqueeze(score_map_softmax, 1)
+        # print("******************score_softmax:", score_map_softmax.shape)#score_softmax: torch.Size([1, 24, 68, 120])
+        # score_map_softmax_adddim1 = torch.unsqueeze(score_map_softmax, 1)#score_softmax: torch.Size([1, 1, 24, 68, 120])
         # print("******************score_softmax:", score_map_softmax_adddim1.shape)
-        score_reshape = score_map_softmax_adddim1.repeat(1, refimg_feature.size()[1], 1, 1, 1)
+        # score_reshape = score_map_softmax_adddim1.repeat(1, refimg_feature.size()[1], 1, 1, 1)
 
         # for channal_id in range(refimg_feature.size()[1]):
         #     score_reshape[:,channal_id,:,:,:]=score_map_softmax[:,0,:,:,:]
-        out_corr = torch.mul(score_reshape, cost)
+        # out_corr = torch.mul(score_reshape, cost)
 
         for f in self.filter:
-            cost = f(out_corr)
+            cost = f(cost)
         cost = self.conv3d_alone(cost)
+        # print("after 3D --------",cost.shape)#torch.Size([1, 1, 24, 68, 120])
         cost = torch.squeeze(cost, 1)
-        pred = F.softmax(cost, dim=1)
+        # print("after 3D and squeeze --------", cost.shape)
+        cost_attentioned = torch.mul(score_map_softmax, cost)
+        pred = F.softmax(cost_attentioned, dim=1)
         pred = disparityregression(disp)(pred)
 
         score_map_pred = disparityregression(disp)(score_map)

@@ -40,13 +40,13 @@ parser.add_argument('--itersize', default=1, type=int,
                     metavar='IS', help='iter size')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
-parser.add_argument('--save_path', type=str, default='results/train-8-18/',
+parser.add_argument('--save_path', type=str, default='results/train-9-9/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-8-18/',
+parser.add_argument('--test_save_path', type=str, default='results/test-9-9/',
                     help='the path of saving checkpoints and log when testing')
 #    'results/8Xmulti/checkpoint_517_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='',help='resume path')
-# parser.add_argument('--resume', type=str, default='results/train-8-18/checkpoint_2020_07_29_softmax__000037.pth',
+parser.add_argument('--resume', type=str, default='/data3/dyf/deeplab-stereonet/results/train-7-18/checkpoint-softmax-sceneflow-0717.pth',help='resume path')
+# parser.add_argument('--resume', type=str, default='results/train-9-9/checkpoint_2020_07_29_softmax__000037.pth',
 #                     help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 parser.add_argument('--score_lr', type=float, default=2, help='score learning rate')
@@ -125,8 +125,8 @@ def main():
             log.info("=> loading checkpoint '{}'".format((args.resume)))
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch'] + 1
-            # model.load_state_dict(checkpoint['state_dict'])
-            model.load_state_dict(checkpoint['model'])
+            model.load_state_dict(checkpoint['state_dict'])
+            # model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             log.info("=> loaded checkpoint '{}' (epoch {})"
                      .format(args.resume, checkpoint['epoch']))
@@ -248,7 +248,7 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :] / 255.0
             # print(outputs[j][0, :, :]/255.0,scoremap_pred[:, :])
-            all_results[-2, 0, :, :] = scoremap_pred[:, :] / 255.
+            all_results[-2, 0, :, :] = scoremap_pred[0,0,:, :] / 255.
             all_results[-1, 0, :, :] = disp_L[0][:, :] / 255.0
             # print("save_path",save_path)
             # 这边这边
