@@ -26,13 +26,15 @@ import numpy as np
 from loss_scoremap import MultiScale
 import datetime
 
+
+
 parser = argparse.ArgumentParser(description='StereoNet_deeplab with sceneflow')
 parser.add_argument('--maxdisp', type=int, default=192, help='maxium disparity')
 parser.add_argument('--loss_weights', type=float, nargs='+', default=[1.0, 1.0, 1.0, 1.0, 1.0])
 # parser.add_argument('--datapath', default='/media/lxy/sdd1/stereo_coderesource/dataset_nie/SceneFlowData', help='datapath')
 
-# parser.add_argument('--datapath', default='/data1/zh/data/sceneflow', help='datapath')
-parser.add_argument('--datapath', default='/data/yyx/data/sceneflow', help='datapath')
+parser.add_argument('--datapath', default='/data1/zh/data/sceneflow', help='datapath')
+# parser.add_argument('--datapath', default='/data/yyx/data/sceneflow', help='datapath')
 parser.add_argument('--epoch', type=int, default=50, help='number of epochs to train')
 parser.add_argument('--train_bsize', type=int, default=1,
                     help='batch size for training(default: 1)')
@@ -40,16 +42,17 @@ parser.add_argument('--itersize', default=1, type=int,
                     metavar='IS', help='iter size')
 parser.add_argument('--test_bsize', type=int, default=1,
                     help='batch size for test(default: 1)')
-parser.add_argument('--save_path', type=str, default='results/train-9-9/',
+parser.add_argument('--save_path', type=str, default='results/train-9-14/',
                     help='the path of saving checkpoints and log when training')
-parser.add_argument('--test_save_path', type=str, default='results/test-9-9/',
+parser.add_argument('--test_save_path', type=str, default='results/test-9-14/',
                     help='the path of saving checkpoints and log when testing')
 #    'results/8Xmulti/checkpoint_517_sceneflow_only.pth'
-parser.add_argument('--resume', type=str, default='/data3/dyf/deeplab-stereonet/results/train-7-18/checkpoint-softmax-sceneflow-0717.pth',help='resume path')
-# parser.add_argument('--resume', type=str, default='results/train-9-9/checkpoint_2020_07_29_softmax__000037.pth',
+parser.add_argument('--resume', type=str, default='/data3/dyf/after-3D/deeplab-stereonet/results/train-9-14/checkpoint_2020_09_16_softmax__000000.pth',help='resume path')
+# parser.add_argument('--resume', type=str, default='results/train-9-14/checkpoint_2020_07_29_softmax__000037.pth',
 #                     help='resume path')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
-parser.add_argument('--score_lr', type=float, default=2, help='score learning rate')
+parser.add_argument('--score_lr', type=float, default=1e-1, help='score learning rate')
+parser.add_argument('--score_max', type=float, default=0.15, help='score loss max band')
 
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 
@@ -103,7 +106,7 @@ def main():
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
-    log = logger.setup_logger(save_path + '/818sceneflow-test.log')  ################3training
+    log = logger.setup_logger(save_path + '/9-14-sceneflow-test.log')  ################3training
     for key, value in sorted(vars(args).items()):
         log.info(str(key) + ':' + str(value))
 
@@ -125,8 +128,8 @@ def main():
             log.info("=> loading checkpoint '{}'".format((args.resume)))
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch'] + 1
-            model.load_state_dict(checkpoint['state_dict'])
-            # model.load_state_dict(checkpoint['model'])
+            # model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             log.info("=> loaded checkpoint '{}' (epoch {})"
                      .format(args.resume, checkpoint['epoch']))
@@ -170,6 +173,7 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
     stages = args.stages
     losses = [AverageMeter() for _ in range(stages)]
     loss_scoremap = [AverageMeter()]
+    score_epe_meter=AverageMeter()
     length_loader = len(dataloader)
     counter = 0
     score_loss_funcation = MultiScale(args)
@@ -185,7 +189,7 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
         outputs = model(imgL, imgR)
 
         scoremap_pred = outputs.pop(-1)  # torch.Size([1, 68, 120])
-        scoremap_pred = scoremap_pred*8
+        scoremap_pred = scoremap_pred*8.0
         scoremap = outputs.pop(-1)
         # print("scoremap",scoremap_origin.shape,"scoremap pred",scoremap.shape)
         outputs = [torch.squeeze(output, 1) for output in outputs]
@@ -193,21 +197,34 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
         loss = [GERF_loss(disp_L, outputs[0], args)]
         # print("gt", disp_L.shape, "output", 0, outputs[0].shape)
         # print("lossshape",loss[0].shape)
-
+        _, H, W = outputs[0].shape
+        all_results = torch.zeros((len(outputs) + 2, 1, H, W))
+        scoremap_pred = F.interpolate(
+            (torch.unsqueeze(scoremap_pred, 1)),
+            size=[H, W],
+            mode='bilinear',
+            align_corners=False)
         for i in range(len(outputs) - 1):
             # print("gt", disp_L.shape, "output", i, outputs[i].shape)
             loss.append(GERF_loss(disp_L, outputs[i + 1], args))
         # print("scoremap", scoremap.shape, "disp_l",disp_L.shape)
         loss_score = score_loss_funcation(scoremap, disp_L)
-        # print("loss_score",loss_score)
         loss.append(loss_score[0] * args.score_lr)
+        if loss_score[0] < args.score_max:
+            loss_all = sum(loss) / (args.itersize)
+        else:
+            loss_all = sum(loss_score[0])
+
+        # # print("scoremap_pred", scoremap_pred.shape, "disp_l", disp_L.shape)
+        # score_epe = GERF_loss(disp_L, scoremap_pred[0,:,:,:], args)
+        # loss.append(loss_score * args.score_lr)
+        # # print("loss_score",loss_score)
+        # loss_all = sum(loss) / (args.itersize)
 
         counter += 1
-        if loss_score[0] < 0.3:
-            loss_all = sum(loss) / (args.itersize)
+
         #############
-        else:
-            loss_all = loss_score[0]
+
         loss_all.backward()  # 反向传播
         if counter == args.itersize:
             optimizer.step()
@@ -216,11 +233,14 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
 
         for idx in range(stages):
             losses[idx].update(loss[idx].item() / args.loss_weights[idx])
+        # loss_scoremap[0].update(loss_score[0].item())
+
         loss_scoremap[0].update(loss_score[0].item())
 
         writer.add_scalar('train_loss_all', loss_all, epoch)
+        # writer.add_scalar('train_score_epe', score_epe, epoch)
         writer.add_scalar('train_loss_score', loss_score[0], epoch)
-        writer.add_scalar('train_loss_-1level', loss[-2], epoch)
+        writer.add_scalar('train_loss_LastStage', loss[-2], epoch)
 
         if batch_idx % args.print_freq == 0:
             # print(loss_score[0])
@@ -238,17 +258,10 @@ def train(dataloader, model, save_path, optimizer, log, epoch=0, ):
                 epoch, batch_idx, length_loader, info_str))
 
             # vis
-            _, H, W = outputs[0].shape
-            scoremap_pred = F.interpolate(
-                (torch.unsqueeze(scoremap_pred, 1)),
-                size=[H, W],
-                mode='bilinear',
-                align_corners=False)
-            all_results = torch.zeros((len(outputs) + 2, 1, H, W))
             for j in range(len(outputs)):
                 all_results[j, 0, :, :] = outputs[j][0, :, :] / 255.0
-            # print(outputs[j][0, :, :]/255.0,scoremap_pred[:, :])
-            all_results[-2, 0, :, :] = scoremap_pred[0,0,:, :] / 255.
+            # print(torch.mean(outputs[j][0, :, :]/255.0),torch.mean(scoremap_pred[:, :]/255.0))
+            all_results[-2, 0, :, :] = scoremap_pred[:, :] / 255.0
             all_results[-1, 0, :, :] = disp_L[0][:, :] / 255.0
             # print("save_path",save_path)
             # 这边这边
@@ -505,5 +518,3 @@ def Thres_metric(D_est, D_gt, mask, thres):
 
 if __name__ == '__main__':
     main()
-
-

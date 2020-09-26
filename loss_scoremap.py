@@ -155,26 +155,27 @@ def loss_calc_unsofted(out, label, target):
     # label = label.transpose(3,2,0,1)
     # label = torch.from_numpy(label)
     label = Variable(label).cuda().int()
-    [batch,channels, h, w] = out.shape
-
-    bin = torch.Tensor(batch,channels, h, w)
+    [batch, channels, h, w] = out.shape
+    bin = torch.Tensor(batch, channels, h, w)
     # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
-    target_list = torch.Tensor(batch,channels, h, w).type(torch.cuda.ByteTensor)
+    target_list = torch.Tensor(batch, channels, h, w).type(torch.cuda.ByteTensor)
     for C in range(channels):
-        bin[:,C, :, :] = C
-        target_list[:,C, :, :] = target[:,0, :, :]
+        bin[:, C, :, :] = C
+        target_list[:, C, :, :] = target[:, 0, :, :]
     bin = Variable(bin).cuda().int()
     res = (bin - label).float()
 
-    W = torch.exp(-0.5 * res.mul(res)).float()
-    m = nn.LogSoftmax()
     out = torch.where(target_list == 0, torch.full_like(out, 1), out)
+    m = nn.LogSoftmax()
     out = m(out)
-    W=F.softmax(W,dim=1)
-    # print("------------",max(W[0,:,50,50]),max(W[0,:,50,100]),max(W[0,:,50,70]))
 
+    W = (-0.5 * res.mul(res)).float()
+    W = F.softmax(W, dim=1)
+
+    # print("------------",torch.max(W[0,:,50,50]),torch.max(W[0,:,50,100]),torch.max(W[0,:,50,70]))
     out = out.mul(W)
     return -torch.mean(out)
+
 
 def loss_calc_soft(out, label, target):
     # type: (object, object, object) -> object
@@ -218,7 +219,7 @@ def loss_calc(out, label, target):
     target_list = torch.Tensor(channels, h, w).type(torch.cuda.ByteTensor)
     for C in range(channels):
         bin[C, :, :] = C
-        target_list[C, :, :] = target[ 0, :, :]
+        target_list[C, :, :] = target[0, :, :]
     bin = Variable(bin).cuda().int()
     res = (bin - label).float()
 
@@ -234,37 +235,37 @@ def loss_calc(out, label, target):
     out = out.mul(W)
     return -torch.mean(out)
 
+
 def loss_calc_manybatch(out, label, target):
-   
     # out shape batch_size x channels x h x w -> batch_size x channels x h x w
     # label shape h x w x 1 x batch_size  -> batch_size x 1 x h x w
 
-        eps = 1e-5
-        #label = label.transpose(3,2,0,1)
-        #label = torch.from_numpy(label)
-        label = Variable(label).cuda().int()
-        [batch,channels,h,w]=out.shape
-        
-        bin = torch.Tensor(batch,channels,h,w)
-        # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
-        target_list = torch.Tensor(batch,channels,h,w).type(torch.cuda.ByteTensor)
-        for C in range(channels):
-            bin[:,C,:,:]=C
-            target_list[:,C,:,:]=target[:,0,:,:]
-        bin = Variable(bin).cuda().int()
-        res = (bin - label).float()
-        
-        W = -0.5*res.mul(res).float()
-        W = F.softmax(W,dim=1)
-        m = nn.LogSoftmax()
-        # m = torch.log2()
-        out = torch.where(target_list==0,torch.full_like(out, 1), out)
-        # out = torch.log_softmax(out)
-        # out = torch.log(out)
-        # out = m(out)
-        out = torch.log2(out+eps)
-        out = out.mul(W)
-        return -torch.mean(out)
+    eps = 1e-5
+    # label = label.transpose(3,2,0,1)
+    # label = torch.from_numpy(label)
+    label = Variable(label).cuda().int()
+    [batch, channels, h, w] = out.shape
+
+    bin = torch.Tensor(batch, channels, h, w)
+    # label_list = torch.Tensor(batchsize,channels,h,w).type(torch.cuda.ByteTensor)
+    target_list = torch.Tensor(batch, channels, h, w).type(torch.cuda.ByteTensor)
+    for C in range(channels):
+        bin[:, C, :, :] = C
+        target_list[:, C, :, :] = target[:, 0, :, :]
+    bin = Variable(bin).cuda().int()
+    res = (bin - label).float()
+
+    W = -0.5 * res.mul(res).float()
+    W = F.softmax(W, dim=1)
+    m = nn.LogSoftmax()
+    # m = torch.log2()
+    out = torch.where(target_list == 0, torch.full_like(out, 1), out)
+    # out = torch.log_softmax(out)
+    # out = torch.log(out)
+    # out = m(out)
+    out = torch.log2(out + eps)
+    out = out.mul(W)
+    return -torch.mean(out)
 
 def generate_image_left(img, disp):
         # print img.shape, disp.shape
